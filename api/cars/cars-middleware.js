@@ -15,12 +15,14 @@ const checkCarId = async (req, res, next) => {
 
 const checkCarPayload = (req, res, next) => {
   const body = req.body;
-  ["vin", "make", "model", "mileage"].forEach(key => {
-    if (body[key] === undefined) {
-      return res.status(400).json({ message: `${key} is missing` });
-    }
-  })
-  next();
+  try {
+    ["vin", "make", "model", "mileage"].forEach(key => {
+      if (body[key] === undefined) {
+        return res.status(400).json({ message: `${key} is missing` });
+      }
+    })
+    next();
+  } catch (error) { next(error)}
 }
 
 const checkVinNumberValid = (req, res, next) => {
@@ -34,13 +36,15 @@ const checkVinNumberValid = (req, res, next) => {
 
 const checkVinNumberUnique = async (req, res, next) => {
   const vinNumber = req.body.vin;
-  const carsList = await cars.getAll();
-  carsList.forEach(car => {
-    if (car.vin === vinNumber){
-      return res.status(400).json({ message: `vin ${vinNumber} already exists` })
+  try {
+    const carsList = await cars.getAll();
+    const found = carsList.find(car => car.vin === vinNumber)
+    if(found){
+      res.status(400).json({ message: `vin ${vinNumber} already exists` })
+    } else {
+      next();    
     }
-  })
-  next();
+  } catch (error) { next(error) }
 }
 
 
